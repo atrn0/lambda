@@ -15,16 +15,16 @@ let main :=
 
 // expr = id | "\" id "." expr | expr expr
 let expr :=
-    ~ = application; <>
-
-// associativity: left
-let application :=
-    ~ = application; ~ = abstraction; { Application (application, abstraction) }
-  | ~ = abstraction; <>
+    ~ = abstraction; <>
 
 // associativity: right
 let abstraction :=
     BACKSLASH; id = ID; DOT; ~ = abstraction; { Abstraction (id, abstraction) }
+  | ~ = application; <>
+
+// associativity: left
+let application :=
+    ~ = application; ~ = a; { Application (application, a) }
   | ~ = a; <>
 
 let a :=
