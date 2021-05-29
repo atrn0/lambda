@@ -2,11 +2,8 @@
  (name lambda))
 
 (ocamllex
-  (modules lexer)
-)
+ (modules lexer))
 
 (menhir
-  (modules parser)
-  (flags -la 2)
-)
-
+ (modules parser)
+ (flags -la 2))

@@ -1,4 +1,4 @@
-open Reduction
+open Evaluation
 open Syntax
 
 exception Error of string

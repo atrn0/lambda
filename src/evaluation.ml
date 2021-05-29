@@ -19,14 +19,19 @@ let rec substitute x t exp = match exp with
 let rec beta = function
     Application (Abstraction (x, t1), exp2) ->
       let t2 = beta exp2 in
-      let e = substitute x t2 t1 in
-      beta e
+      substitute x t2 t1
   | Application (exp1, exp2) ->
       let t = beta exp1 in
       Application (t, exp2)
   | e -> e
 
+(* 
+  TODO:
+    - consider better way to detect stop condition
+    - detect infinite reduction
+    - set timeout
+*)
 let rec eval t =
   let b = beta t in
   if (string_of_exp b) = (string_of_exp t)
-  then [] else b :: (eval b)
+  then [t] else t :: (eval b)

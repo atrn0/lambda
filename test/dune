@@ -1,2 +1,3 @@
 (test
- (name lambda))
+ (name lambda_test)
+ (libraries ounit2 lambda))

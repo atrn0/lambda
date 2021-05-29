@@ -2,7 +2,7 @@
 open Syntax
 %}
 
-%token BACKSLASH LPAREN RPAREN DOT 
+%token BACKSLASH LAMBDA LPAREN RPAREN DOT 
 %token <Syntax.id> ID
 %token EOL
 
@@ -20,6 +20,7 @@ let expr :=
 // associativity: right
 let abstraction :=
     BACKSLASH; id = ID; DOT; ~ = abstraction; { Abstraction (id, abstraction) }
+  | LAMBDA; id = ID; DOT; ~ = abstraction; { Abstraction (id, abstraction) } 
   | ~ = application; <>
 
 // associativity: left
