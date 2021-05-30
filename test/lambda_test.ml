@@ -7,7 +7,7 @@ let err s = raise (Error s)
 
 let parse s = Parser.main Lexer.main (Lexing.from_string s)
 let eval s =
-  let e = Evaluation.eval (parse s) in
+  let e = Evaluation.eval Lambda.Environment.empty (parse s) in
   let len = List.length e in
   if len > 0 then List.nth e (len - 1) else err ("Failed to evaluate")
 
