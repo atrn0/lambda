@@ -37,17 +37,18 @@ let rec substitute x t exp = match exp with
 
 (* call-by-value beta reduction
   only outermost redexes are reduced and where a redex is reduced only when its right-hand side has already been reduced to a value
-  (λx. t1) t2 -> [x → t2]t1
+  - E-App1 (t1 → t1': t1 t2 → t1' t2)
+  - E-App2 (t2 → t2': v1 t2 → v1 t2')
+  - E-AppAbs ((λx.t12) v2 → [x → v2]t12)
 *)
 let rec beta = function
-    Application (Abstraction (x, t1), exp2) ->
-      let t2 = beta exp2 in
-      substitute x t2 t1
-  | Application (Var x, exp2) -> Application (Var x, beta exp2)
-  | Application (exp1, exp2) ->
-      let t = beta exp1 in
-      Application (t, exp2)
-  | Abstraction (i, e) -> Abstraction (i, beta e)
+    (* E-AppAbs *)
+    Application (Abstraction (x1, t1), Abstraction (x2, t2)) -> 
+      substitute x1 (Abstraction (x2, t2)) t1
+    (* E-App2 *)
+  | Application (Abstraction(x, t1), t2) -> Application (Abstraction(x, t1), beta t2)
+    (* E-App1 *)
+  | Application (t1, t2) -> Application (beta t1, t2)
   | e -> e
 
 (* 
@@ -59,5 +60,5 @@ let rec beta = function
 let rec eval env t =
   let t1 = Environment.fold_right (fun (x, t) exp -> substitute x t exp) env t in
   let b = beta t1 in
-  if (string_of_exp b) = (string_of_exp t)
-  then [t] else t :: (eval env b)
+  if (string_of_exp b) = (string_of_exp t) then [t]
+  else t :: (eval env b)

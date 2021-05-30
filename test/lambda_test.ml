@@ -7,7 +7,7 @@ let err s = raise (Error s)
 
 let parse s = Parser.main Lexer.main (Lexing.from_string s)
 let eval s =
-  let e = Evaluation.eval Lambda.Environment.empty (parse s) in
+  let e = Evaluation.eval Lambda.Cui.initial_env (parse s) in
   let len = List.length e in
   if len > 0 then List.nth e (len - 1) else err ("Failed to evaluate")
 
@@ -18,41 +18,58 @@ let tests = [
   { input = "λx.x"; expected = Abstraction ("x", Var "x") };
   { input = "λx.x y"; expected = Abstraction ("x", Application (Var "x", Var "y")) };
   { input = "λx.x y"; expected = Abstraction ("x", Application (Var "x", Var "y")) };
-  { input = "(λx.x) x"; expected = Var "x" };
-  { input = "(λl. λm. λn. l m n) (λt. λf. t) v w"; expected = Var "v" };
+  { input = "(λx.x) x"; expected = Application (Abstraction ("x", Var "x"), Var "x") };
+  { input = "(λx.x) (λz.z)"; expected = Abstraction ("z", Var "z") };
+  { input = "test tru (λv.v) (λw.w)"; expected = Abstraction ("v", Var "v") };
   { 
+    (* omega *)
     input = "(λx. x x) (λx. x x)"; 
     expected = Application (
       Abstraction ("x", Application (Var "x", Var "x")),
       Abstraction ("x", Application (Var "x", Var "x")))
   };
-  { input = "(λx. (λx. x)) y"; expected = Abstraction ("x'", Var "x'") };
-  { input = "(λx. (λx. (λx. x))) y z"; expected = Abstraction ("x''", Var "x''") };
-  { input = "(λx. (λz. x)) z"; expected = Abstraction ("z'", Var "z") };
-  { input = "(λx. (λz. x)) z"; expected = Abstraction ("z'", Var "z") };
+  { input = "(λx. (λx. x)) (λv.v)"; expected = Abstraction ("x'", Var "x'") };
+  { input = "(λx. (λx. (λx. x))) (λv.v) (λw.w)"; expected = Abstraction ("x''", Var "x''") };
+  { input = "equal c0 c0"; expected = Abstraction ("t", Abstraction ("f'", Var "t")) };
+  {
+    input = "equal (scc c0) c1"; 
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
   { 
-    input = "(λn. λs. λz. s (n s z)) (λs. λz. z)"; 
+    input = "equal (plus c1 (scc c1)) (scc (scc c1))";
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  { 
+    input = "equal (times (scc c1) (scc (scc c1))) (scc (scc (scc (scc (scc c1)))))"; 
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  { 
+    input = "equal (fst (pair c0 c1)) c0";
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  {
+    input = "equal (snd (pair c0 c1)) c1"; 
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  { 
+    input = "equal (prd c1) c0";
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  { 
+    input = "equal (prd c0) c0";
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  { 
+    input = "equal (sub (scc c1) c1) c1";
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
+  };
+  { 
+    input = "factorial c0";
     expected = Abstraction ("s", Abstraction ("z", Application (Var "s", Var "z")))
   };
   { 
-    input = "(λm. λn. λs. λz. m s (n s z)) (λs. λz. s z) ((λn. λs. λz. s (n s z)) (λs. λz. z))"; 
-    expected = Abstraction ("s", Abstraction ("z", Application (Var "s", Application (Var "s", Var "z"))))
-  };
-  { 
-    input = "(λm. λn. m ((λm. λn. λs. λz. m s (n s z)) n) (λs. λz. z)) (λs. λz. s z) (λs. λz. s(s z))"; 
-    expected = Abstraction ("s", Abstraction ("z'", Application (Var "s", Application (Var "s", Var "z'"))))
-  };
-  { 
-    input = "(λp. p (λt. λf. t)) ((λf. λs. λb. b f s) x y)"; 
-    expected = Var "x"
-  };
-  { 
-    input = "(λp. p (λt. λf. f)) ((λf. λs. λb. b f s) x y)"; 
-    expected = Var "y"
-  };
-  { 
-    input = "(λm. (((m (λp. ((λs. (λb. ((b (p (λt. (λf. f)))) s))) (((λm. (λn. (λs. (λz. ((m s) ((n s) z)))))) (λs. (λz. (s z)))) ((λp. (p (λt. (λf. f)))) p))))) (((λf. (λs. (λb. ((b f) s)))) (λs. (λz. z))) (λs. (λz. z)))) (λt. (λf. t)))) ((λn. λs. λz. s (n s z)) (λs. λz. s z))";
-    expected = Abstraction ("s", Abstraction ("z''", Application (Var "s", Var "z''")))
+    input = "equal (factorial (scc (scc c1))) (scc (scc (scc (scc (scc c1)))))";
+    expected = Abstraction ("t", Abstraction ("f'", Var "t"))
   };
 ]
 

@@ -11,6 +11,7 @@ let initial_env = Environment.from_list [
   ("test", parse "λl. λm. λn. l m n");
   ("tru", parse "λt. λf. t");
   ("fls", parse "λt. λf. f");
+  ("and", parse "λx. λy. x y fls");
   ("iszro", parse "λm. m (λx. fls) tru");
   ("c0", parse "λs. λz. z");
   ("c1", parse "λs. λz. s z");
@@ -21,6 +22,8 @@ let initial_env = Environment.from_list [
   ("fst", parse "λp. p tru");
   ("snd", parse "λp. p fls");
   ("prd", parse "λm. fst (m (λp. pair (snd p) (plus c1 (snd p))) (pair c0 c0))");
+  ("sub", parse "λm. λn. n prd m");
+  ("equal", parse "λm. λn. and (iszro (sub m n)) (iszro (sub n m))");
   ("fix", parse "λf. (λx. f (λy. x x y)) (λx. f (λy. x x y))");
   ("factorial", parse "fix (λf. λn. test (iszro n) (λx. c1) (λx. (times n (f (prd n)))) c0)");
   ("nil", parse "λc. λn. n");
