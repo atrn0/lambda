@@ -16,4 +16,13 @@ let rec map f = function
 let rec fold_right f env a =
   match env with
     [] -> a
-  | (_, v)::rest -> f v (fold_right f rest a)
+  | hd::rest -> f hd (fold_right f rest a)
+
+let rec from_list = function
+  [] -> empty
+| (id, v) :: tl -> 
+  if List.mem_assoc id tl then
+    raise (Bound_Several_Times
+    ("Variable " ^ id ^ " is bound several times"))
+  else
+    extend id v (from_list tl)

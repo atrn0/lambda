@@ -6,6 +6,6 @@ rule main = parse
 | "(" { Parser.LPAREN }
 | ")" { Parser.RPAREN }
 | "." { Parser.DOT }
-| ['a'-'z'] ['a'-'z' '0'-'9' '_' '\'']*
+| ['a'-'z' '_'] ['a'-'z' '0'-'9' '_']*
     { Parser.ID (Lexing.lexeme lexbuf) }
 | ['\n'] { Parser.EOL }

@@ -23,8 +23,36 @@ let tests = [
   { 
     input = "(λx. x x) (λx. x x)"; 
     expected = Application (
-      Abstraction ("x", Application (Var "x", Var "x")), 
-      Abstraction ("x", Application (Var "x", Var "x"))) 
+      Abstraction ("x", Application (Var "x", Var "x")),
+      Abstraction ("x", Application (Var "x", Var "x")))
+  };
+  { input = "(λx. (λx. x)) y"; expected = Abstraction ("x'", Var "x'") };
+  { input = "(λx. (λx. (λx. x))) y z"; expected = Abstraction ("x''", Var "x''") };
+  { input = "(λx. (λz. x)) z"; expected = Abstraction ("z'", Var "z") };
+  { input = "(λx. (λz. x)) z"; expected = Abstraction ("z'", Var "z") };
+  { 
+    input = "(λn. λs. λz. s (n s z)) (λs. λz. z)"; 
+    expected = Abstraction ("s", Abstraction ("z", Application (Var "s", Var "z")))
+  };
+  { 
+    input = "(λm. λn. λs. λz. m s (n s z)) (λs. λz. s z) ((λn. λs. λz. s (n s z)) (λs. λz. z))"; 
+    expected = Abstraction ("s", Abstraction ("z", Application (Var "s", Application (Var "s", Var "z"))))
+  };
+  { 
+    input = "(λm. λn. m ((λm. λn. λs. λz. m s (n s z)) n) (λs. λz. z)) (λs. λz. s z) (λs. λz. s(s z))"; 
+    expected = Abstraction ("s", Abstraction ("z'", Application (Var "s", Application (Var "s", Var "z'"))))
+  };
+  { 
+    input = "(λp. p (λt. λf. t)) ((λf. λs. λb. b f s) x y)"; 
+    expected = Var "x"
+  };
+  { 
+    input = "(λp. p (λt. λf. f)) ((λf. λs. λb. b f s) x y)"; 
+    expected = Var "y"
+  };
+  { 
+    input = "(λm. (((m (λp. ((λs. (λb. ((b (p (λt. (λf. f)))) s))) (((λm. (λn. (λs. (λz. ((m s) ((n s) z)))))) (λs. (λz. (s z)))) ((λp. (p (λt. (λf. f)))) p))))) (((λf. (λs. (λb. ((b f) s)))) (λs. (λz. z))) (λs. (λz. z)))) (λt. (λf. t)))) ((λn. λs. λz. s (n s z)) (λs. λz. s z))";
+    expected = Abstraction ("s", Abstraction ("z''", Application (Var "s", Var "z''")))
   };
 ]
 
@@ -34,7 +62,7 @@ let suite = "test suite for lambda" >:::
     let e = Syntax.string_of_exp tt.expected in
     tt.input >:: (fun _ -> assert_equal
     ~printer: (fun x -> x)
-    i e)
+    e i)
     ) tests
 
 let _ = run_test_tt_main suite
