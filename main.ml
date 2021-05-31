@@ -1,3 +1,3 @@
 open Lambda.Cui
 
-let () = rep ()
+let () = repl ()

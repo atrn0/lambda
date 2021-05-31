@@ -31,14 +31,23 @@ let initial_env = Environment.from_list [
   ("head", parse "λh. λt. λc. λn. c h (t c n)");
 ]
 
+let usage_msg = "lambda [-v] [-s <strategy>]"
+let opt_verbose = ref false
+let opt_strategy = ref "full"
+let speclist =
+  [("-v", Arg.Set opt_verbose, "Output all reduction steps");
+   ("-s", Arg.Set_string opt_strategy, "Set strategy (full or call_by_value). default strategy is call_by_value")]
+let strategy_of_str s = match s with "full" -> Full | _ -> CallByValue
 
-(* read eval print *)
-let rec rep env =
-  print_string "# ";
-  flush stdout;
-  let exp = Parser.main Lexer.main (Lexing.from_channel stdin) in
-  let b = eval initial_env exp in
-  List.iter (fun b ->
-  print_string ("β " ^ (string_of_exp b));
-  print_newline ()) b;
-  rep env
+
+(* read eval print loop *)
+let repl () =
+  Arg.parse speclist (fun _ -> ()) usage_msg;
+  while true do
+    print_string "# ";
+    flush stdout;
+    let t = Parser.main Lexer.main (Lexing.from_channel stdin) in
+    let b = eval initial_env t { verbose = !opt_verbose; strategy = strategy_of_str !opt_strategy } in
+    print_string ("→ " ^ (string_of_exp b));
+    print_newline ();
+  done

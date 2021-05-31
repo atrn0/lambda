@@ -4,6 +4,12 @@ exception Error of string
 
 let err s = raise (Error s)
 
+type strategy =
+    Full
+  | CallByValue
+
+type option = {verbose: bool; strategy: strategy}
+
 (* alpha reduction
   substitute id with id ^ "'"
 *)
@@ -41,24 +47,39 @@ let rec substitute x t exp = match exp with
   - E-App2 (t2 → t2': v1 t2 → v1 t2')
   - E-AppAbs ((λx.t12) v2 → [x → v2]t12)
 *)
-let rec beta = function
+let rec call_by_value = function
     (* E-AppAbs *)
     Application (Abstraction (x1, t1), Abstraction (x2, t2)) -> 
       substitute x1 (Abstraction (x2, t2)) t1
     (* E-App2 *)
-  | Application (Abstraction(x, t1), t2) -> Application (Abstraction(x, t1), beta t2)
+  | Application (Abstraction(x, t1), t2) -> Application (Abstraction(x, t1), call_by_value t2)
     (* E-App1 *)
-  | Application (t1, t2) -> Application (beta t1, t2)
+  | Application (t1, t2) -> Application (call_by_value t1, t2)
   | e -> e
 
-(* 
+let full t =
+  let rec full2 = function
+      Application (Abstraction (x, t1), t2) -> substitute x t2 t1
+    | Application (Var x, t) -> Application (Var x, full2 t)
+    | Application (t1, t2) -> Application (full2 t1, t2)
+    | Abstraction (x, t) -> Abstraction (x, full2 t)
+    | t -> t
+  in
+  let b = call_by_value t in
+  if (string_of_exp b) = (string_of_exp t) then full2 b else b
+
+(*
   TODO:
     - consider better way to detect stop condition
     - detect infinite reduction
     - set timeout
 *)
-let rec eval env t =
+let eval env t option =
   let t1 = Environment.fold_right (fun (x, t) exp -> substitute x t exp) env t in
-  let b = beta t1 in
-  if (string_of_exp b) = (string_of_exp t) then [t]
-  else t :: (eval env b)
+  let reduce = (match option.strategy with Full -> full | CallByValue -> call_by_value) in
+  let rec eval1 t2 =
+    let b = reduce t2 in
+    if (string_of_exp b) = (string_of_exp t2) then t2 else
+      (if option.verbose then print_endline ("β " ^ (string_of_exp t2));
+      eval1 b)
+  in eval1 t1
